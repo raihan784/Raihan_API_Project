@@ -1,0 +1,134 @@
+﻿@model Training2._1.Models.Student
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+<div class="float-start">
+    <a class="btn btn-sm btn-primary p-1 m-1" asp-action="Index" asp-controller="Student">Index</a>
+</div>
+
+
+<br />
+
+<form asp-action="Create">
+
+    <div class="form-group">
+        <label asp-for="Name" class="control-label"></label>
+        <input asp-for="Name" class="form-control" autocomplete="off" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="DptId" class="control-label">Department</label>
+        <select asp-for="DptId" class="form-control" asp-items="@ViewBag.Dept">
+            <option value="">-- Select Department --</option>
+        </select>
+        <span asp-validation-for="DptId" class="text-danger"></span>
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">Create</button>
+</form>
+
+<br />
+<form action="/Student/Upload" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" />
+    <input type="submit" value="Upload" />
+</form>
+
+
+<br />
+<div id="example-table"></div>
+
+@section Scripts
+{
+
+
+    <script>
+        $(document).ready(function () {
+            LoadData();
+        });
+
+        $('#example-table').on('click', '.btn-edit', function () {
+            var studentId = $(this).data('id');
+            $.ajax({
+                url: '/Student/Edit?id=' + studentId,
+                success: function (response) { 
+                    var model = response.data;
+
+                    // $("#Id").val(model.Id);
+                    // $("#Name").val(model.Name);
+                    // $("#Dpt").val(model.Dpt).trigger('change');
+
+
+                    window.location.href = '/Student/Edit?id=' + studentId
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+
+        $('#example-table').on('click', '.btn-delete', function () {
+            var studentId = $(this).data('id');
+            $.ajax({
+                url: '/Student/Delete?id=' + studentId,
+                success: function (response) {
+                    LoadData();
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr.responseText);
+                }
+            });
+        });
+
+
+
+        function LoadData() {
+
+            var table = new Tabulator("#example-table", {
+                layout: "fitColumns",
+                //minHeight: 400,
+                pagination: true,
+                movableColumns: true,
+                ajaxURL: '/Student/LoadData',
+                paginationMode: "remote",
+                paginationSize: 5,
+                paginationInitialPage: 1,
+                paginationSizeSelector: [5, 10, 15],
+                paginationCounter: "rows",
+                // dataTree: true,
+                // dataTreeStartExpanded: false,
+                ajaxConfig: "get",
+                ajaxContentType: "json",
+
+                ajaxResponse: function (url, params, response) {
+                    table.setMaxPage(response.last_page);
+                    console.log("response.last_page", response.last_page);
+
+                    dataLoadExpense = response.std;
+                    console.log("dataLoadExpense:", dataLoadExpense);
+
+                    return {
+                        data: dataLoadExpense,
+                        last_page: response.last_page,
+                    };
+                },
+                columns: [
+                    { title: "Id", field: "id", sorter: "number" },
+                    { title: "Name", field: "name", sorter: "string" },
+                    { title: "Department", field: "dpt.name" },
+                    {
+                        title: "Actions", formatter: function (cell) {
+                            var std = cell.getRow().getData().id;
+                            return "<button class='btn-edit btn-primary btn-sm' data-id='" + cell.getRow().getData().id + "'>Edit</button>" +
+                                "<button class='btn-delete btn-danger btn-sm' data-id='" + cell.getRow().getData().id + "'>Delete</button>";
+                        }
+                    }
+                ]
+            });
+        };
+
+            
+    </script>
+}
